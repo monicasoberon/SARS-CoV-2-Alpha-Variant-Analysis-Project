@@ -1,0 +1,202 @@
+---
+title: "ev02"
+output: html_document
+date: "2023-05-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Nombre y matrícula:
+Mónica Soberón A01254488
+
+Link del video de presentación individual: 
+https://youtu.be/CL6HcXeH2cI 
+
+VARIANTE A ANALIZAR: ALPHA  (B.1.1.7)
+
+Nuestra elección para esta evidencia es:
+- Analizar las secuencias de SARS-CoV-2 reportadas en los 20 países con más casos reportados. Y puedes tratar de responder a la pregunta: ¿Son muy diferentes las variantes entre cada país? ¿Es diferente el SARS-CoV-2 entre las diferentes poblaciones: Asiática, Hispana, Europea o Africana?
+
+Las variantes en cada país no pueden ser tan diferentes al provenir de la misma variante, que en este caso es la variante ALPHA, también conocida como B.1.1.7, sin embargo, puede cambiar su secuencia genética por factores como mutar debido a que el virus puede interactuar con otro virus, o al ingresar al cuerpo humano, cada humano es diferente y recibe de manera diferente el virus, por lo que por esa razón cuando se propaga en un país, puede cambiar su secuencia genética.
+Entre las diferentes poblaciones es posible que haya diferencia entre las variantes por diferentes factores como la densidad de población, sus medidas de prevención contra el SARS-COV-2, aspectos socioeconómicos inclusive, o aspectos sociales, por lo que se pueden generar estas pequeñas diferencias.
+
+
+
+Instalar los paquetes necesarios
+
+
+```{r}
+#Instalar paquetes
+install.packages("devtools")
+install.packages("ape")
+install.packages("seqinr")
+install.packages("adegenet")
+install.packages("DECIPHER")
+install.packages("ggtree")
+install.packages("viridis")
+install.packages("ggmsa")
+install.packages("ggplot2")
+install.packages("rentrez")
+install.packages("Biostrings")
+```
+Leer paquetes
+```{r}
+library(DECIPHER)
+library(rentrez)
+library(Biostrings)
+library(seqinr)
+library(ape)
+email <- "a01285597@tec.mx"
+```
+1. Cargar el paquete para así poder cargar las 20 secuencias de las variantes del SARS-Cov-2 en los países con mayores casos reportados. Al final, calcular la longitud de cada secuencia de las bases del ADN, y mostrarla.
+```{r}
+library(seqinr)
+
+#Cargar secuencias de diferentes países que reportaron casos de SARS-Cov-2 de la variante ALPHA
+acc_numbers <- c("OQ691110","OL548855","MZ458361","OV887013","OU271645","OQ895908","OM462425","ON506946","OV104775","OU015784","OU351845","OX466590","ON065247","OL461241","OU596629","OM982660","OP711833","OK433300","OX314241 ","OQ557580")
+
+sequences <- entrez_fetch(db = "nucleotide", id = acc_numbers, rettype = "fasta", retmode = "text", email = email)
+```
+
+Cargar las secuencias
+```{r}
+writeLines(sequences, "virus.fasta")
+aa_seqs <- readDNAStringSet("virus.fasta",format = "fasta")
+aa_seqs
+```
+2. Calcular las longitudes de cada secuencia
+
+```{r}
+#Crear un objeto para poner cada secuencia en su país correspondiente
+argentina <- aa_seqs[1]
+austria <- aa_seqs[2]
+bahrain <- aa_seqs[3]
+dinamarca <- aa_seqs[4]
+estonia <- aa_seqs[5]
+francia <- aa_seqs[6]
+alemania <- aa_seqs[7]
+italia <- aa_seqs[8]
+eslovaquia <- aa_seqs[9]
+espana <- aa_seqs[10]
+suiza <- aa_seqs[11]
+reinoUnido <- aa_seqs[12]
+estadosUnidos <- aa_seqs[13]
+mexico <- aa_seqs[14]
+lebano <- aa_seqs[15]
+japon <- aa_seqs[16]
+kenia <- aa_seqs[17]
+nuevaZelanda <- aa_seqs[18]
+islandia <- aa_seqs[19]
+colombia <- aa_seqs[20]
+
+# Crear lista con todas las secuencias
+secuencias <- list(argentina, austria,bahrain,dinamarca,estonia,francia,alemania,italia,eslovaquia,espana,suiza,reinoUnido,estadosUnidos, mexico, lebano, japon, kenia, nuevaZelanda, islandia, colombia)
+
+# Lista de los nombres de los países
+nombres <- list("Argentina","Austria","Bahrain","Dinamarca","Estonia","Francia","Alemania","Italia","Eslovaquia","España","Suiza","Reino Unido","Estados Unidos","México","Lebano","Japón","Kenia", "Nueva Zelanda","Islandia","Colombia")
+
+# Calcular la longitud de cada secuencia y mostrar a qué país corresponde
+for (i in 1:length(secuencias)) {
+  nombre_objeto <- names(secuencias)[i] # obtener el nombre del objeto
+  longitud_secuencia <- length(secuencias[[i]][[1]]) # obtener la longitud de la secuencia
+  mensaje <- paste("La longitud de la variante Alpha en", nombres[i], "es:", longitud_secuencia)
+  print(mensaje) }
+```
+
+3. Crear gráficas para comparar la cantidad de bases del ADN en cada variante del virus SARS-Cov-2 que cambia con respecto al país
+```{r}
+
+# Leer un archivo FASTA que contiene secuencias de virus
+virus<- read.fasta(file="virus.fasta")
+
+# Asignar cada secuencia de virus a una variable correspondiente al país
+argentina <- virus[1]
+austria <- virus[2]
+bahrain <- virus[3]
+dinamarca <- virus[4]
+estonia <- virus[5]
+francia <- virus[6]
+alemania <- virus[7]
+italia <- virus[8]
+eslovaquia <- virus[9]
+espana <- virus[10]
+suiza <- virus[11]
+reinoUnido <- virus[12]
+estadosUnidos <- virus[13]
+mexico <- virus[14]
+lebano <- virus[15]
+japon <- virus[16]
+kenia <- virus[17]
+nuevaZelanda <- virus[18]
+islandia <- virus[19]
+colombia <- virus[20]
+
+# Definir la nueva paleta de colores en degradado
+grad_colors <- c('#FF6B6B','#FEB692','#FFD891','#C7ED89','#93D5FF','#AF93FF')
+
+# Crear la matriz para las gráficas
+layout(matrix(c(1:8), nrow=2, byrow=TRUE))
+
+# Generar las gráficas de barras para cada país para visualizar las bases de ADN
+barplot(table(argentina), main='Alpha - Argentina', col = grad_colors)
+barplot(table(austria), main='Alpha - Austria', col = grad_colors)
+barplot(table(bahrain), main='Alpha - Bahrain', col = grad_colors)
+barplot(table(dinamarca), main='Alpha - Dinamarca', col = grad_colors)
+barplot(table(estonia), main='Alpha - Estonia', col = grad_colors)
+barplot(table(francia), main='Alpha - Francia', col = grad_colors)
+barplot(table(alemania), main='Alpha - Alemania', col = grad_colors)
+barplot(table(italia), main='Alpha - Italia', col = grad_colors)
+barplot(table(eslovaquia), main='Alpha - Eslovaquia', col = grad_colors)
+barplot(table(espana), main='Alpha - España', col = grad_colors)
+barplot(table(suiza), main='Alpha - Suiza', col = grad_colors)
+barplot(table(reinoUnido), main='Alpha - Reino Unido', col = grad_colors)
+barplot(table(estadosUnidos), main='Alpha - Estados Unidos', col = grad_colors)
+barplot(table(mexico), main='Alpha - México', col = grad_colors)
+barplot(table(lebano), main='Alpha - Líbano', col = grad_colors)
+barplot(table(japon), main='Alpha - Japón', col = grad_colors)
+barplot(table(kenia), main='Alpha - Kenia', col = grad_colors)
+barplot(table(nuevaZelanda), main='Alpha - Nueva Zelanda', col = grad_colors)
+barplot(table(islandia), main='Alpha - Islandia', col = grad_colors)
+barplot(table(colombia), main='Alpha - Colombia', col = grad_colors)
+```
+
+Agrega un análisis jerárquico global obtenido de las secuencias que se seleccionaron para estudiar.
+
+Crear un alineamiento para poder visualizarlo.
+```{r}
+seqs_align <- AlignSeqs(aa_seqs)
+BrowseSeqs(seqs_align, highlight=0)
+writeXStringSet(seqs_align, file="seqs_align.fasta")
+aligned <- read.alignment("seqs_align.fasta", format = "fasta")
+```
+
+Crear un árbol filogenético
+```{r}
+library(ape)
+matriz_distancia <- dist.alignment(aligned, matrix = "similarity")
+temp <- as.matrix(as.matrix(matriz_distancia))
+#table.paint(temp, cleg=0, clabel.row=.5, clabel.col=.5) + scale_color_viridis()
+heatmap(temp, cexRow = 0.8, cexCol = 0.8, scale="none", Colv=NA, Rowv=NA, margins=c(5,5))
+
+arbol <- nj(matriz_distancia)
+class(arbol) 
+arbol <- ladderize(arbol)
+
+plot(arbol, cex = 0.6)
+title("Variante Alpha SARS-COV-2 árbol filogenético")
+```
+
+5. Agrega una interpretación escrita e individual de tus gráficas y tus conclusiones según el caso de estudio que seleccionaste. No olvides sustentar tus argumentos con las lecturas que realizaste.
+
+El caso de estudio seleccionado tiene la meta de hacer un análisis de las secuencias de SARS-COV-2 reportadas en 20 países diferentes. Para recaudar datos de las secuencias se utilizaron las páginas de cov-lineages y NCBI virus, estas proporcionaron información sobre las cepas encontradas en cada país y permitieron descargar los FASTAS para luego analizarlos. Las lecturas que realizamos sobre la variante analizada,la variante Alpha, o B.1.1.7, es una de las variantes con la mayor cantidad de información e investigación en todo el mundo. Es conocida por ser mucho más contagiosa que la variante original del SARS-CoV-2, creando una urgencia por estudiar y entenderla por el riesgo que carga. La posible variación genética entre poblaciones influyen en las diferencias genéticas observadas en el virus. También las medidas que se tomasn para prevenir el virus, la susceptibilidad y la densidad poblacional pueden contribuir a diferencias genéticas. Es importante notar que algunas muestras no estaban muy bien tomadas y contaban con muchos componentes "n".
+
+De las gráficas se puede concluir que todas las sepas son muy similares, las sepas que eran un poco  diferentes en las proporciones de los componentes a, c, g,t, contaban con una mayor cantidad componente n, lo que significa que las muestras probablemente mostraban más variabilidad porque fueron tomadas sin las medidas indicadas. 
+
+Se puede concluir que la variante Alpha se quedo muy similar al propargarse por el mundo, no fue muy afectada por los cambios poblacionales.
+
+REFERENCIAS
+
+National Center for Biotechnology Information. (2021). COVID-19: Genomic epidemiology. Recuperado el 6 de mayo de 2023, de https://www.ncbi.nlm.nih.gov/labs/virus/vssi/#/virus?SeqType_s=Nucleotide&VirusLineage_ss=SARS-CoV-2,%20taxid:2697049
+
